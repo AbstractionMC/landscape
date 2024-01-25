@@ -1,0 +1,5 @@
+accessWidener v2 named
+
+accessible field net/minecraft/world/gen/structure/JigsawStructure maxDistanceFromCenter I
+accessible field net/minecraft/world/gen/structure/JigsawStructure startPool Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/gen/structure/JigsawStructure startJigsawName Ljava/util/Optional;

@@ -1,0 +1,22 @@
+{
+	"variants": {
+		"mode=custom_ruleset": {
+			"model": "landscape:block/zone_block_custom_ruleset"
+		},
+		"mode=trigger": {
+			"model": "landscape:block/zone_block_trigger"
+		},
+		"mode=deny_break": {
+			"model": "landscape:block/zone_block_deny_break"
+		},
+		"mode=deny_place": {
+			"model": "landscape:block/zone_block_deny_place"
+		},
+		"mode=allow_break": {
+			"model": "landscape:block/zone_block_allow_break"
+		},
+		"mode=allow_place": {
+			"model": "landscape:block/zone_block_allow_place"
+		}
+	}
+}

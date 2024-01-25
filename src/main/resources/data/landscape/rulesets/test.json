@@ -1,0 +1,7 @@
+{
+	"name": "test",
+	"rules": {
+		"rule.core.block.place": false,
+		"rule.core.block.break": false
+	}
+}

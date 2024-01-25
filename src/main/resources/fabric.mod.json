@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "landscape",
+	"version": "${version}",
+	"name": "Landscape",
+	"description": "Utilities for creating Adventure maps.",
+	"authors": [
+		"rotgruengelb"
+	],
+	"contact": {
+		"homepage": "https://rotgruengelb.net/landscape",
+		"sources": "https://github.com/AbstractionMC/landscape"
+	},
+	"license": "MIT",
+	"icon": "assets/landscape/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.rotgruengelb.landscape.Landscape"
+		],
+		"client": [
+			"net.rotgruengelb.landscape.LandscapeClient"
+		]
+	},
+	"mixins": [
+		"landscape.mixins.json",
+		{
+			"config": "landscape.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.15.2",
+		"minecraft": "~1.20.4",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}

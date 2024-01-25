@@ -1,0 +1,6 @@
+{
+	"parent": "minecraft:block/cube_all",
+	"textures": {
+		"all": "landscape:block/zone_block_allow_break"
+	}
+}
