@@ -1,14 +1,15 @@
 package net.rotgruengelb.landscape.feature.zones.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.rotgruengelb.landscape.util.StringUtils;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import static net.rotgruengelb.landscape.Landscape.LOGGER;
@@ -23,36 +24,42 @@ public class AvailableRuleSets {
 
 	public static Map<String, RuleSet> load(ResourceManager manager) {
 		Map<String, RuleSet> ruleSets = new HashMap<>();
+		Gson gson = new Gson();
+
 		for (Identifier id : manager.findAllResources("rulesets", path -> path.getPath()
 				.endsWith(".json")).keySet()) {
 			if (manager.getResource(id).isEmpty()) {
 				continue;
 			}
+
 			try (InputStream stream = manager.getResource(id).get().getInputStream()) {
-				ObjectMapper objectMapper = new ObjectMapper();
-				JsonNode rootNode = objectMapper.readTree(stream);
+				JsonElement jsonElement = gson.fromJson(new InputStreamReader(stream), JsonElement.class);
 
-				if (rootNode.has("name") && rootNode.has("rules")) {
-					String name = rootNode.get("name").asText();
-					JsonNode rulesNode = rootNode.get("rules");
+				if (jsonElement.isJsonObject()) {
+					JsonObject rootNode = jsonElement.getAsJsonObject();
 
-					String cleanId = StringUtils.removeFileExtension(id.toString());
+					if (rootNode.has("name") && rootNode.has("rules")) {
+						String name = rootNode.get("name").getAsString();
+						JsonObject rulesNode = rootNode.getAsJsonObject("rules");
 
-					RuleSet ruleSet = new RuleSet(name, new Identifier(cleanId));
+						String cleanId = StringUtils.removeFileExtension(id.toString());
 
-					Iterator<Map.Entry<String, JsonNode>> fields = rulesNode.fields();
-					while (fields.hasNext()) {
-						Map.Entry<String, JsonNode> entry = fields.next();
-						String ruleName = entry.getKey();
-						boolean ruleValue = entry.getValue().asBoolean();
-						ruleSet.add(ruleName, ruleValue);
+						RuleSet ruleSet = new RuleSet(name, new Identifier(cleanId));
+
+						for (Map.Entry<String, JsonElement> entry : rulesNode.entrySet()) {
+							String ruleName = entry.getKey();
+							boolean ruleValue = entry.getValue().getAsBoolean();
+							ruleSet.add(ruleName, ruleValue);
+						}
+
+						ruleSets.put(cleanId, ruleSet);
 					}
-					ruleSets.put(cleanId, ruleSet);
 				}
 			} catch (Exception e) {
 				LOGGER.error("Error occurred while loading resource json" + id.toString(), e);
 			}
 		}
+
 		return ruleSets;
 	}
 

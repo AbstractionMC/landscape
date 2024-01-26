@@ -1,8 +1,7 @@
 //file:noinspection GradlePackageVersionRange
 plugins {
-	id 'fabric-loom' version '1.2-SNAPSHOT'
+	id 'fabric-loom' version '1.5-SNAPSHOT'
 	id 'maven-publish'
-	id 'io.github.juuxel.loom-vineflower' version '1.11.0'
 	id 'signing'
 }
 
@@ -46,11 +45,10 @@ allprojects {
 		mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-		include(implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1"))
 		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-		include(modImplementation('me.lucko:fabric-permissions-api:0.2-SNAPSHOT'))
-		include(implementation(annotationProcessor("net.rotgruengelb:nixienaut:${project.nixienaut_version}")))
-		include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.2")))
+
+		include (modImplementation 'me.lucko:fabric-permissions-api:0.2-SNAPSHOT')
+		include (implementation(annotationProcessor("net.rotgruengelb:nixienaut:${project.nixienaut_version}")))
 	}
 
 	processResources {
