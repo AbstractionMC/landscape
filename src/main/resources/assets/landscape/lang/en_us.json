@@ -1,6 +1,7 @@
 {
 	"block.landscape.zone_block": "Zone Block",
 	"text.landscape.zone_block.screen.show_zones": "Show zones:",
+	"text.landscape.zone_block.screen.set_priority": "Priority",
 	"text.landscape.zone_block.screen.title": "Zone Block",
 	"text.landscape.zone_block.mode_info.trigger": "Trigger Mode - Execute on Player entry",
 	"text.landscape.zone_block.mode_info.deny_break": "Deny Break Mode - Deny Block breaking",

@@ -13,7 +13,7 @@ import static net.rotgruengelb.landscape.block.entity.ModBlockEntities.ZONE_BLOC
 @Environment(EnvType.CLIENT)
 public class LandscapeClient implements ClientModInitializer {
 
-	public static final Logger CLOGGER = LoggerFactory.getLogger("Landscape/CLIENT");
+	public static final Logger C_LOGGER = LoggerFactory.getLogger("Landscape/CLIENT");
 
 	@Override
 	public void onInitializeClient() {

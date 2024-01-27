@@ -33,6 +33,7 @@ import static net.rotgruengelb.landscape.network.UpdateZoneBlockC2SPacket.UPDATE
 public class ZoneBlockScreen extends Screen {
 	private static final ImmutableList<ZoneBlockMode> MODES = ImmutableList.copyOf(ZoneBlockMode.values());
 	private static final Text SHOW_ZONES_TEXT = Text.translatable("text.landscape.zone_block.screen.show_zones");
+	private static final Text SET_PRIORITY_TEXT = Text.translatable("text.landscape.zone_block.screen.set_priority");
 	private static final Text title = Text.translatable("text.landscape.zone_block.screen.title");
 	private final BlockPos pos;
 	private final ZoneBlockMode originalMode;
@@ -192,7 +193,7 @@ public class ZoneBlockScreen extends Screen {
 		super.render(context, mouseX, mouseY, delta);
 		this.inputZones.render(context, mouseX, mouseY, delta);
 		this.inputPriority.render(context, mouseX, mouseY, delta);
-		context.drawTextWithShadow(this.textRenderer, Text.literal("Priority"), this.width / 2 - 153, 70, 0xA0A0A0);
+		context.drawTextWithShadow(this.textRenderer, SET_PRIORITY_TEXT, this.width / 2 - 153, 70, 0xA0A0A0);
 		context.drawTextWithShadow(this.textRenderer, SHOW_ZONES_TEXT, this.width / 2 + 154 - this.textRenderer.getWidth(SHOW_ZONES_TEXT), 70, 0xA0A0A0);
 		context.drawCenteredTextWithShadow(this.textRenderer, title, this.width / 2, 10, 0xFFFFFF);
 		context.drawTextWithShadow(this.textRenderer, this.newMode.asText(), this.width / 2 - 153, 174, 0xA0A0A0);
