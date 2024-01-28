@@ -26,17 +26,16 @@ public class AvailableZoneManagers extends PersistentState {
 		if (world.getServer() != null) {
 			getServerState(world.getServer());
 		}
-		Identifier world_id = world.getDimensionKey().getValue();
-		//
-		MANAGERS.computeIfAbsent(world_id, k -> new ArrayList<>()).add(pos);
+		Identifier worldId = world.getDimensionKey().getValue();
+		MANAGERS.computeIfAbsent(worldId, k -> new ArrayList<>()).add(pos);
 	}
 
 	public static void onRemovedManager(BlockPos pos, World world) {
 		if (world.getServer() != null) {
 			getServerState(world.getServer());
 		}
-		List<BlockPos> dim_managers = MANAGERS.get(world.getDimensionKey().getValue());
-		dim_managers.remove(pos);
+		List<BlockPos> dimManagers = MANAGERS.get(world.getDimensionKey().getValue());
+		dimManagers.remove(pos);
 	}
 
 	public static List<BlockPos> getManagers(World world) {

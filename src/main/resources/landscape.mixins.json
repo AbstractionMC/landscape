@@ -5,7 +5,8 @@
 	"mixins": [
 		"BlockItemMixin",
 		"ModifyJigsawStructureLimitsMixin",
-		"ModifyStructureBlockLimitsMixin"
+		"ModifyStructureBlockLimitsMixin",
+		"PlayerEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

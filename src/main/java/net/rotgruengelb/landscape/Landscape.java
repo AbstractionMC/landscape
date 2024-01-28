@@ -16,7 +16,6 @@ public class Landscape implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-
 		ModCommandNodes.registerModCommandNodes();
 		ModBlocks.registerModBlocks();
 		ModBlockEntities.registerModBlockEntities();
