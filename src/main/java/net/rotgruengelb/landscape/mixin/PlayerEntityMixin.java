@@ -22,7 +22,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 			method = "isBlockBreakingRestricted", at = @At(value = "HEAD"), cancellable = true
 	)
 	private void rule__core_block_break(World world, BlockPos pos, GameMode gameMode, CallbackInfoReturnable<Boolean> cir) {
-		if (!API.posAllowsAction(pos, "rule.core.block.break", world, Registries.BLOCK.getId(world.getBlockState(pos).getBlock()).toString())) {
+		if (!API.posAllowsAction(pos, "rule.core.player.block.break", world, Registries.BLOCK.getId(world.getBlockState(pos).getBlock()).toString())) {
 			cir.setReturnValue(true);
 		}
 	}

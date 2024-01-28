@@ -1,9 +1,9 @@
 {
 	"name": "test",
 	"rules": {
-		"rule.core.block.place": false,
-		"rule.core.block.place.minecraft:stone": true,
-		"rule.core.block.break": false,
-		"rule.core.block.break.minecraft:stone": true
+		"rule.core.player.block.place": false,
+		"rule.core.player.block.place.minecraft:stone": true,
+		"rule.core.player.block.break": false,
+		"rule.core.player.block.break.minecraft:stone": true
 	}
 }

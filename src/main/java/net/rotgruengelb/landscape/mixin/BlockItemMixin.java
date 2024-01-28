@@ -21,7 +21,7 @@ public class BlockItemMixin {
 	private void rule__core_block_place(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir) {
 		//		if (context.getStack().isOf(ZONE_BLOCK_ITEM)) { return; } (HOPEFULLY NOT NEEDED ANYMORE)
 		if (context.getPlayer() == null) { return; }
-		if (!API.posAllowsAction(context.getBlockPos(), "rule.core.block.place", context.getWorld(), Registries.ITEM.getId(context.getStack()
+		if (!API.posAllowsAction(context.getBlockPos(), "rule.core.player.block.place", context.getWorld(), Registries.ITEM.getId(context.getStack()
 				.getItem()).toString())) {
 			cir.setReturnValue(net.minecraft.util.ActionResult.FAIL);
 		}
