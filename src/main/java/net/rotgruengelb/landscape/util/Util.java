@@ -15,28 +15,26 @@ public class Util {
 	 */
 	public static boolean mapWins(Map<Integer, Boolean> map) {
 		int highestPriority = 0;
-		for (int priority : map.keySet()) {
-			if (priority > highestPriority) {
-				highestPriority = priority;
-			}
-		}
 		int trueCount = 0;
 		int falseCount = 0;
-		for (int priority : map.keySet()) {
-			if (priority == highestPriority) {
-				if (map.get(priority)) {
+
+		for (Map.Entry<Integer, Boolean> entry : map.entrySet()) {
+			int priority = entry.getKey();
+			boolean value = entry.getValue();
+
+			if (priority > highestPriority) {
+				highestPriority = priority;
+				trueCount = value ? 1 : 0;
+				falseCount = value ? 0 : 1;
+			} else if (priority == highestPriority) {
+				if (value) {
 					trueCount++;
 				} else {
 					falseCount++;
 				}
 			}
 		}
-		if (trueCount > falseCount) {
-			return true;
-		} else if (falseCount > trueCount) {
-			return false;
-		} else {
-			return false;
-		}
+
+		return trueCount > falseCount;
 	}
 }

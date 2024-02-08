@@ -2,25 +2,26 @@ package net.rotgruengelb.landscape.feature.zones;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.rotgruengelb.landscape.Landscape;
 import net.rotgruengelb.landscape.feature.zones.manager.AvailableZoneManagers;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 
+import static net.rotgruengelb.landscape.Landscape.DEV_ENV;
 import static net.rotgruengelb.landscape.util.Util.mapWins;
 
 public class API {
 
-	public static Object posAllowsAction(BlockPos pos, String rule, World world, boolean includeNull) {
+	public static Optional<Boolean> posAllowsAction(BlockPos pos, String rule, World world, boolean includeNull) {
+		long startTime = 0;
+		if (DEV_ENV) {
+			startTime = System.nanoTime();
+		}
 		Map<Integer, Boolean> values = new HashMap<>();
 		for (BlockPos managerPos : AvailableZoneManagers.getManagers(world)) {
-			ZoneManager zoneManager = (ZoneManager) world.getBlockEntity(managerPos);
-			if (!(world.getBlockEntity(managerPos) instanceof ZoneManager) || zoneManager == null) {
-				continue;
-			}
-			if (zoneManager.isBlockPosInZone(pos, false)) {
+			if (world.getBlockEntity(managerPos) instanceof ZoneManager zoneManager && zoneManager.isBlockPosInZone(pos, false)) {
 				if (zoneManager.getRuleSet().containsRule(rule)) {
 					values.put(zoneManager.getPriority(), zoneManager.getRuleSet()
 							.getRuleValue(rule));
@@ -28,25 +29,23 @@ public class API {
 			}
 		}
 		if (values.isEmpty()) {
-			if (includeNull) {
-				return null;
-			}
-			return true;
+			return includeNull ? Optional.empty() : Optional.of(true);
 		}
-		return mapWins(values);
+
+		if (DEV_ENV) {
+			long endTime = System.nanoTime();
+			long duration = (endTime - startTime) / 1_000_000; // Convert to milliseconds
+			System.out.println("Check for rule: " + rule + " for pos: " + pos.toString() + " \ntook " + duration + "ms");
+		}
+		return Optional.of(mapWins(values));
 	}
 
 	public static boolean posAllowsAction(BlockPos pos, String rule, World world) {
-		@NotNull var result = Objects.requireNonNull(posAllowsAction(pos, rule, world, false));
-		return (boolean) result;
+		return posAllowsAction(pos, rule, world, false).orElseThrow(() -> new IllegalStateException("Result should not be null"));
 	}
 
 	public static boolean posAllowsAction(BlockPos pos, String rule, World world, String extendedRule) {
-		var extendedResult = posAllowsAction(pos, mergeRuleParts(rule, extendedRule), world, true);
-		if (extendedResult == null) {
-			return posAllowsAction(pos, rule, world);
-		}
-		return (boolean) extendedResult;
+		return posAllowsAction(pos, mergeRuleParts(rule, extendedRule), world, true).orElseGet(() -> posAllowsAction(pos, rule, world));
 	}
 
 	public static String mergeRuleParts(String rule, String extendedRule) {

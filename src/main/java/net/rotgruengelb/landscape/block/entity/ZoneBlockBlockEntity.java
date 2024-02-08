@@ -8,14 +8,17 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.rotgruengelb.landscape.Landscape;
 import net.rotgruengelb.landscape.accessor.LandscapeClientPlayerEntity;
 import net.rotgruengelb.landscape.block.ModBlocks;
 import net.rotgruengelb.landscape.block.ZoneBlock;
 import net.rotgruengelb.landscape.block.enums.ZoneBlockMode;
 import net.rotgruengelb.landscape.feature.zones.ZoneManager;
 import net.rotgruengelb.landscape.feature.zones.manager.AvailableZoneManagers;
+import net.rotgruengelb.landscape.feature.zones.rule.AvailableRuleSets;
 import net.rotgruengelb.landscape.feature.zones.rule.RuleSet;
 import net.rotgruengelb.landscape.util.math.BlockZone;
 import net.rotgruengelb.landscape.util.math.PositionUtils;
@@ -23,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProvider, ZoneManager {
 
@@ -31,7 +35,7 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	private boolean showZones;
 	private boolean powered;
 	private int priority = 1;
-	private String ruleSet = "landscape:rulesets/test";
+	private RuleSet ruleSet = RuleSet.of(AvailableRuleSets.EMPTY_RULESET);
 
 	public ZoneBlockBlockEntity(BlockPos pos, BlockState state) {
 		super(ModBlockEntities.ZONE_BLOCK_BLOCK_ENTITY, pos, state);
@@ -43,6 +47,7 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 		super.writeNbt(nbt);
 		nbt.putBoolean("showZones", this.showZones);
 		nbt.putInt("priority", this.priority);
+		nbt.putString("ruleSet", this.ruleSet.getIdentifierString());
 		nbt.put("zones", this.zonesToNbt());
 		nbt.putString("mode", this.mode.toString());
 	}
@@ -68,6 +73,7 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 		} catch (IllegalArgumentException e) {
 			this.mode = ZoneBlockMode.TRIGGER;
 		}
+		this.ruleSet = RuleSet.of(Objects.requireNonNullElse(RuleSet.of(Identifier.tryParse(nbt.getString("ruleSet"))).getIdentifier(), AvailableRuleSets.EMPTY_RULESET));
 		this.updateBlockMode();
 	}
 
@@ -77,7 +83,6 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 			BlockState blockState = this.world.getBlockState(blockPos);
 			if (blockState.isOf(ModBlocks.ZONE_BLOCK)) {
 				this.world.setBlockState(blockPos, blockState.with(ZoneBlock.MODE, this.mode), 2);
-				this.setCachedState(blockState.with(ZoneBlock.MODE, this.mode));
 			}
 		}
 	}
@@ -93,7 +98,7 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	@Override
 	public void markRemoved() {
 		super.markRemoved();
-		if (this.world != null && !this.world.isClient) {
+		if (this.world != null && !world.isClient) {
 			AvailableZoneManagers.onRemovedManager(this.pos, this.world);
 		}
 	}
@@ -101,7 +106,7 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	@Override
 	public void cancelRemoval() {
 		super.cancelRemoval();
-		if (this.world != null && !this.world.isClient) {
+		if (this.world != null && !world.isClient) {
 			AvailableZoneManagers.onCreatedManager(this.pos, this.world);
 		}
 	}
@@ -142,13 +147,13 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	public void setPriority(int priority) { this.priority = priority; }
 
 	@Override
-	public RuleSet getRuleSet() { return RuleSet.of(ruleSet); }
+	public RuleSet getRuleSet() { return ruleSet; }
 
-	public void setRuleSet(String ruleSet) { this.ruleSet = ruleSet; }
+	public void setRuleSet(Identifier ruleSet) { this.ruleSet = RuleSet.of(ruleSet); }
 
-	public void setRuleSet(RuleSet ruleSet) { this.ruleSet = ruleSet.getIdentifier().toString(); }
+	public void setRuleSet(RuleSet ruleSet) { this.ruleSet = ruleSet; }
 
-	public String getRuleSetString() { return ruleSet; }
+	public String getRuleSetString() { Landscape.LOGGER.info(ruleSet.getIdentifierString()); return ruleSet.getIdentifierString(); }
 
 	public boolean openScreen(PlayerEntity player) {
 		if (!player.isCreativeLevelTwoOp()) { return false; }

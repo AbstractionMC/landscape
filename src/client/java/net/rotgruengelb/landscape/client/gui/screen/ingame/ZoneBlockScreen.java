@@ -21,13 +21,14 @@ import net.rotgruengelb.landscape.block.ModBlocks;
 import net.rotgruengelb.landscape.block.ZoneBlock;
 import net.rotgruengelb.landscape.block.entity.ZoneBlockBlockEntity;
 import net.rotgruengelb.landscape.block.enums.ZoneBlockMode;
+import net.rotgruengelb.landscape.feature.zones.rule.RuleSet;
 import net.rotgruengelb.landscape.network.UpdateZoneBlockC2SPacket;
 import net.rotgruengelb.nixienaut.ClampedNum;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
 
-import static net.rotgruengelb.landscape.network.UpdateZoneBlockC2SPacket.UPDATE_ZONE_BLOCK_PACKET_ID;
+import static net.rotgruengelb.landscape.network.constant.PacketIds.C2S_UPDATE_ZONE_BLOCK_PACKET_ID;
 
 @Environment(value = EnvType.CLIENT)
 public class ZoneBlockScreen extends Screen {
@@ -38,6 +39,7 @@ public class ZoneBlockScreen extends Screen {
 	private final BlockPos pos;
 	private final ZoneBlockMode originalMode;
 	private final boolean originalShowZones;
+	private final String newRuleSet;
 	private NbtCompound originalZones;
 	private final int originalPriority;
 	private final ClampedNum<Integer> newPriority = new ClampedNum<>(0, 99);
@@ -48,6 +50,7 @@ public class ZoneBlockScreen extends Screen {
 	private CyclingButtonWidget<ZoneBlockMode> buttonMode;
 	private TextFieldWidget inputZones;
 	private TextFieldWidget inputPriority;
+	private TextFieldWidget inputRuleSet;
 
 	public ZoneBlockScreen(ZoneBlockBlockEntity zoneBlock) {
 		super(title);
@@ -56,15 +59,18 @@ public class ZoneBlockScreen extends Screen {
 		this.originalShowZones = zoneBlock.shouldShowZones();
 		this.originalPriority = zoneBlock.getPriority();
 		this.newPriority.adjustAndSetValue(this.originalPriority);
+		this.newRuleSet = zoneBlock.getRuleSetString();
 		this.newMode = this.originalMode;
 		this.newShowZones = this.originalShowZones;
 	}
 
 	private void done() {
 		this.clientBlockState(this.newMode);
-		ClientPlayNetworking.send(UPDATE_ZONE_BLOCK_PACKET_ID, new UpdateZoneBlockC2SPacket(this.pos, this.newMode, this.newShowZones, this.processZones(), this.processPriority()).create());
+		ClientPlayNetworking.send(C2S_UPDATE_ZONE_BLOCK_PACKET_ID, new UpdateZoneBlockC2SPacket(this.pos, this.newMode, this.newShowZones, this.processZones(), this.processPriority(), this.processRuleSet()).create());
 		this.client.setScreen(null);
 	}
+
+	private String processRuleSet() { return this.inputRuleSet.getText(); }
 
 	private NbtCompound processZones() {
 		try {
@@ -126,6 +132,11 @@ public class ZoneBlockScreen extends Screen {
 		this.inputPriority.setMaxLength(2);
 		this.inputPriority.setText(this.newPriority.getValue().toString());
 		this.addSelectableChild(this.inputPriority);
+		this.inputRuleSet = new TextFieldWidget(this.textRenderer, this.width / 2 - 152, 120, 300, 20, Text.translatable("text.landscape.zone_block.input_ruleset")) {
+		};
+		this.inputRuleSet.setMaxLength(200);
+		this.inputRuleSet.setText(this.newRuleSet);
+		this.addSelectableChild(this.inputRuleSet);
 		this.updateWidgets(this.newMode);
 		this.clientBlockState(this.newMode);
 	}
@@ -145,7 +156,9 @@ public class ZoneBlockScreen extends Screen {
 	public void resize(MinecraftClient client, int width, int height) {
 		String inputZonesContent = this.inputZones.getText();
 		String inputPriorityContent = this.inputPriority.getText();
+		String inputRuleSetContent = this.inputRuleSet.getText();
 		this.init(client, width, height);
+		this.inputRuleSet.setText(inputRuleSetContent);
 		this.inputZones.setText(inputZonesContent);
 		this.inputPriority.setText(inputPriorityContent);
 	}
@@ -193,6 +206,8 @@ public class ZoneBlockScreen extends Screen {
 		super.render(context, mouseX, mouseY, delta);
 		this.inputZones.render(context, mouseX, mouseY, delta);
 		this.inputPriority.render(context, mouseX, mouseY, delta);
+		this.inputRuleSet.render(context, mouseX, mouseY, delta);
+		context.drawTextWithShadow(this.textRenderer, SET_PRIORITY_TEXT, this.width / 2 - 153, 110, 0xA0A0A0);
 		context.drawTextWithShadow(this.textRenderer, SET_PRIORITY_TEXT, this.width / 2 - 153, 70, 0xA0A0A0);
 		context.drawTextWithShadow(this.textRenderer, SHOW_ZONES_TEXT, this.width / 2 + 154 - this.textRenderer.getWidth(SHOW_ZONES_TEXT), 70, 0xA0A0A0);
 		context.drawCenteredTextWithShadow(this.textRenderer, title, this.width / 2, 10, 0xFFFFFF);

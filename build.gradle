@@ -3,6 +3,7 @@ plugins {
 	id 'fabric-loom' version '1.5-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
+	id "co.uzzu.dotenv.gradle" version "4.0.0"
 }
 
 allprojects {
@@ -10,6 +11,7 @@ allprojects {
 	apply plugin: "fabric-loom"
 	apply plugin: "maven-publish"
 	apply plugin: "signing"
+	apply plugin: "co.uzzu.dotenv.gradle"
 
 	group = 'net.rotgruengelb'
 	version = "${project.mod_version}+${rootProject.minecraft_version}"
@@ -49,6 +51,8 @@ allprojects {
 
 		include (modImplementation 'me.lucko:fabric-permissions-api:0.2-SNAPSHOT')
 		include (implementation(annotationProcessor("net.rotgruengelb:nixienaut:${project.nixienaut_version}")))
+		include (implementation 'org.eclipse.collections:eclipse-collections-api:11.1.0')
+		include (implementation 'org.eclipse.collections:eclipse-collections:11.1.0')
 	}
 
 	processResources {

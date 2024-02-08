@@ -16,14 +16,16 @@ import static net.rotgruengelb.landscape.Landscape.LOGGER;
 
 public class AvailableRuleSets {
 
-	private static Map<String, RuleSet> RULE_SETS = new HashMap<>();
+	public static final Identifier EMPTY_RULESET = new Identifier("landscape:rulesets/empty");
 
-	public static void apply(Map<String, RuleSet> resource) { RULE_SETS = resource; }
+	private static Map<Identifier, RuleSet> RULE_SETS = new HashMap<>();
 
-	public static Map<String, RuleSet> getRuleSets() { return RULE_SETS; }
+	public static void apply(Map<Identifier, RuleSet> resource) { RULE_SETS = resource; }
 
-	public static Map<String, RuleSet> load(ResourceManager manager) {
-		Map<String, RuleSet> ruleSets = new HashMap<>();
+	public static Map<Identifier, RuleSet> getRuleSets() { return RULE_SETS; }
+
+	public static Map<Identifier, RuleSet> load(ResourceManager manager) {
+		Map<Identifier, RuleSet> ruleSets = new HashMap<>();
 		Gson gson = new Gson();
 
 		for (Identifier id : manager.findAllResources("rulesets", path -> path.getPath()
@@ -42,9 +44,9 @@ public class AvailableRuleSets {
 						String name = rootNode.get("name").getAsString();
 						JsonObject rulesNode = rootNode.getAsJsonObject("rules");
 
-						String cleanId = StringUtils.removeFileExtension(id.toString());
+						Identifier cleanId = new Identifier(StringUtils.removeFileExtension(id.toString()));
 
-						RuleSet ruleSet = new RuleSet(name, new Identifier(cleanId));
+						RuleSet ruleSet = new RuleSet(name, cleanId);
 
 						for (Map.Entry<String, JsonElement> entry : rulesNode.entrySet()) {
 							String ruleName = entry.getKey();
@@ -63,5 +65,8 @@ public class AvailableRuleSets {
 		return ruleSets;
 	}
 
-	public static RuleSet getRuleSetByIdentifier(String name) { return RULE_SETS.get(name); }
+	public static RuleSet getRuleSet(Identifier name) {
+		RuleSet ruleSet = RULE_SETS.get(name);
+		return ruleSet != null ? ruleSet : RULE_SETS.get(EMPTY_RULESET);
+	}
 }

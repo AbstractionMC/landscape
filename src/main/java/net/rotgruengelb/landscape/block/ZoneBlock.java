@@ -17,7 +17,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldView;
 import net.rotgruengelb.landscape.block.entity.ZoneBlockBlockEntity;
 import net.rotgruengelb.landscape.block.enums.ZoneBlockMode;
 import net.rotgruengelb.landscape.state.ModProperties;

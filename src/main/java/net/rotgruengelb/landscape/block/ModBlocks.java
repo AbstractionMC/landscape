@@ -39,6 +39,8 @@ public class ModBlocks {
 	}
 
 	private static void modifyItemGroups() {
-		/* ZONE_BLOCK */ ItemGroupEvents.modifyEntriesEvent(ItemGroups.OPERATOR).register(content -> content.addAfter(Items.COMMAND_BLOCK_MINECART, ZONE_BLOCK));
+		/* ZONE_BLOCK */
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.OPERATOR)
+				.register(content -> content.addAfter(Items.COMMAND_BLOCK_MINECART, ZONE_BLOCK));
 	}
 }

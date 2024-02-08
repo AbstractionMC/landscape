@@ -1,5 +1,7 @@
 package net.rotgruengelb.landscape.feature.zones.manager;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtIntArray;
@@ -21,18 +23,31 @@ public class AvailableZoneManagers extends PersistentState {
 
 	private static final Map<Identifier, List<BlockPos>> MANAGERS = new HashMap<>();
 	private static final Type<AvailableZoneManagers> type = new Type<>(AvailableZoneManagers::new, AvailableZoneManagers::createFromNbt, null);
+	@Environment(EnvType.CLIENT) private static boolean clientIsInitialized = false;
 
 	public static void onCreatedManager(BlockPos pos, World world) {
-		if (world.getServer() != null) {
-			getServerState(world.getServer());
+		MinecraftServer server = world.getServer();
+		if (server != null) {
+			getServerState(server);
 		}
 		Identifier worldId = world.getDimensionKey().getValue();
 		MANAGERS.computeIfAbsent(worldId, k -> new ArrayList<>()).add(pos);
 	}
 
+	@Environment(EnvType.CLIENT)
+	public static void clientInitialized() {
+		clientIsInitialized = true;
+	}
+
+	@Environment(EnvType.CLIENT)
+	public static boolean isClientInitialized() {
+		return clientIsInitialized;
+	}
+
 	public static void onRemovedManager(BlockPos pos, World world) {
-		if (world.getServer() != null) {
-			getServerState(world.getServer());
+		MinecraftServer server = world.getServer();
+		if (server != null) {
+			getServerState(server);
 		}
 		List<BlockPos> dimManagers = MANAGERS.get(world.getDimensionKey().getValue());
 		dimManagers.remove(pos);
@@ -66,6 +81,23 @@ public class AvailableZoneManagers extends PersistentState {
 		AvailableZoneManagers state = persistentStateManager.getOrCreate(type, Landscape.MOD_ID);
 		state.markDirty();
 		return state;
+	}
+
+	public static NbtList posListToNbtList(List<BlockPos> managers) {
+		NbtList nbtList = new NbtList();
+		for (BlockPos pos : managers) {
+			nbtList.add(new NbtIntArray(List.of(pos.getX(), pos.getY(), pos.getZ())));
+		}
+		return nbtList;
+	}
+
+	public static List<BlockPos> posNbtListToList(NbtList managers) {
+		List<BlockPos> posList = new ArrayList<>();
+		for (NbtElement pos : managers) {
+			int[] posArray = ((NbtIntArray) pos).getIntArray();
+			posList.add(new BlockPos(posArray[0], posArray[1], posArray[2]));
+		}
+		return posList;
 	}
 
 	@Override

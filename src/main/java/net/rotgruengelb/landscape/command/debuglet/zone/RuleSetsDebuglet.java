@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.rotgruengelb.landscape.feature.zones.rule.AvailableRuleSets;
 import net.rotgruengelb.landscape.feature.zones.rule.RuleSet;
 
@@ -11,10 +12,10 @@ import java.util.Map;
 
 public class RuleSetsDebuglet {
 	public static int showAvailableRuleSets(CommandContext<ServerCommandSource> ctx) {
-		Map<String, RuleSet> rulesets = AvailableRuleSets.getRuleSets();
-		for (String ruleSet : rulesets.keySet()) {
+		Map<Identifier, RuleSet> rulesets = AvailableRuleSets.getRuleSets();
+		for (Identifier ruleSet : rulesets.keySet()) {
 			ctx.getSource()
-					.sendMessage(Text.literal("ruleset: " + ruleSet + " -> " + AvailableRuleSets.getRuleSetByIdentifier(ruleSet)
+					.sendMessage(Text.literal("ruleset: " + ruleSet + " -> " + AvailableRuleSets.getRuleSet(ruleSet)
 							.getName()));
 		}
 		return 1;
@@ -22,7 +23,7 @@ public class RuleSetsDebuglet {
 
 	public static int showRuleSetRules(CommandContext<ServerCommandSource> ctx) {
 		String ruleSetName = StringArgumentType.getString(ctx, "ruleset_name");
-		RuleSet ruleSet = AvailableRuleSets.getRuleSetByIdentifier(ruleSetName);
+		RuleSet ruleSet = AvailableRuleSets.getRuleSet(Identifier.tryParse(ruleSetName));
 		if (ruleSet == null) {
 			ctx.getSource()
 					.sendError(Text.literal("No RuleSet with name " + ruleSetName + " found"));
