@@ -2,6 +2,7 @@
 	"block.landscape.zone_block": "Zone Block",
 	"text.landscape.zone_block.screen.show_zones": "Show zones:",
 	"text.landscape.zone_block.screen.set_priority": "Priority",
+	"text.landscape.zone_block.screen.set_ruleset": "Ruleset",
 	"text.landscape.zone_block.screen.title": "Zone Block",
 	"text.landscape.zone_block.mode_info.trigger": "Trigger Mode - Execute on Player entry",
 	"text.landscape.zone_block.mode_info.deny_break": "Deny Break Mode - Deny Block breaking",
@@ -9,10 +10,14 @@
 	"text.landscape.zone_block.mode_info.allow_break": "Allow Break Mode - Allow Block breaking",
 	"text.landscape.zone_block.mode_info.allow_place": "Allow Place Mode - Allow Block placing",
 	"text.landscape.zone_block.mode_info.custom_ruleset": "Custom Ruleset - Use a Custom Ruleset",
+	"text.landscape.zone_block.mode_info.deny_world_modify": "Deny World Modify - Deny all World modifications",
+	"text.landscape.zone_block.mode_info.allow_world_modify": "Allow World Modify - Allow all World modifications",
 	"text.landscape.zone_block.mode.trigger": "Trigger",
 	"text.landscape.zone_block.mode.deny_break": "Deny Break",
 	"text.landscape.zone_block.mode.deny_place": "Deny Place",
 	"text.landscape.zone_block.mode.allow_break": "Allow Break",
 	"text.landscape.zone_block.mode.allow_place": "Allow Place",
-	"text.landscape.zone_block.mode.custom_ruleset": "Custom Ruleset"
+	"text.landscape.zone_block.mode.custom_ruleset": "Custom Ruleset",
+	"text.landscape.zone_block.mode.deny_world_modify": "Deny World Modify",
+	"text.landscape.zone_block.mode.allow_world_modify": "Allow World Modify"
 }

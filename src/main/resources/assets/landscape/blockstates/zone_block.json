@@ -17,6 +17,12 @@
 		},
 		"mode=allow_place": {
 			"model": "landscape:block/zone_block_allow_place"
+		},
+		"mode=allow_world_modify": {
+			"model": "landscape:block/zone_block_allow_world_modify"
+		},
+		"mode=deny_world_modify": {
+			"model": "landscape:block/zone_block_deny_world_modify"
 		}
 	}
 }

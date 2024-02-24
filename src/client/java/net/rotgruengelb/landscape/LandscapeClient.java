@@ -4,6 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
+import net.rotgruengelb.landscape.client.network.receive.ModS2CReceivers;
 import net.rotgruengelb.landscape.client.render.block.entity.ZoneBlockBlockEntityRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,5 +19,6 @@ public class LandscapeClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		BlockEntityRendererFactories.register(ZONE_BLOCK_BLOCK_ENTITY, ZoneBlockBlockEntityRenderer::new);
+		ModS2CReceivers.registerModS2CReceivers();
 	}
 }

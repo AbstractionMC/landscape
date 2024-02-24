@@ -27,7 +27,10 @@ public class PositionUtils {
 	public static final float RAD_ANG_270 = 4.712389f;
 
 	public static BlockPos blockPosToRelative(BlockPos blockPos, BlockPos originBlockPos) {
-		return new BlockPos(blockPos.getX() - originBlockPos.getX(), blockPos.getY() - originBlockPos.getY(), blockPos.getZ() - originBlockPos.getZ());
+		int x = blockPos.getX() - originBlockPos.getX();
+		int y = blockPos.getY() - originBlockPos.getY();
+		int z = blockPos.getZ() - originBlockPos.getZ();
+		return new BlockPos(x, y, z);
 	}
 
 	/**
@@ -40,7 +43,7 @@ public class PositionUtils {
 	 * @return the rotated blockPos
 	 */
 	public static BlockPos rotateBlockPos(BlockPos blockPos, Direction direction) {
-		if (direction.equals(Direction.NORTH)) {
+		if (direction == Direction.NORTH) {
 			return blockPos;
 		}
 		float radianAngle = switch (direction) {

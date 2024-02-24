@@ -28,11 +28,15 @@ public class AvailableRuleSets {
 		Map<Identifier, RuleSet> ruleSets = new HashMap<>();
 		Gson gson = new Gson();
 
+		LOGGER.info("Loading rule sets");
+
 		for (Identifier id : manager.findAllResources("rulesets", path -> path.getPath()
 				.endsWith(".json")).keySet()) {
 			if (manager.getResource(id).isEmpty()) {
 				continue;
 			}
+
+			LOGGER.debug("Loading rule set " + id.toString());
 
 			try (InputStream stream = manager.getResource(id).get().getInputStream()) {
 				JsonElement jsonElement = gson.fromJson(new InputStreamReader(stream), JsonElement.class);
@@ -54,11 +58,13 @@ public class AvailableRuleSets {
 							ruleSet.add(ruleName, ruleValue);
 						}
 
+						LOGGER.debug("Loaded rule set " + cleanId);
+
 						ruleSets.put(cleanId, ruleSet);
 					}
 				}
 			} catch (Exception e) {
-				LOGGER.error("Error occurred while loading resource json" + id.toString(), e);
+				LOGGER.error("Error occurred while loading resource json" + id, e);
 			}
 		}
 

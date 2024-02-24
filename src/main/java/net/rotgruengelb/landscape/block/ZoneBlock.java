@@ -17,6 +17,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import net.rotgruengelb.landscape.Landscape;
 import net.rotgruengelb.landscape.block.entity.ZoneBlockBlockEntity;
 import net.rotgruengelb.landscape.block.enums.ZoneBlockMode;
 import net.rotgruengelb.landscape.state.ModProperties;
@@ -43,10 +44,12 @@ public class ZoneBlock extends BlockWithEntity implements OperatorBlock, BlockEn
 	@Override
 	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
 		if (!player.isCreativeLevelTwoOp()) {
+			Landscape.LOGGER.debug("Player " + player.getName().toString() + " tried to interact with a ZoneBlock without permission!");
 			return ActionResult.PASS;
 		}
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		if (blockEntity instanceof ZoneBlockBlockEntity) {
+			Landscape.LOGGER.debug("Player " + player.getName().toString() + " was allowed to interact with a ZoneBlock because they met the required permissions!");
 			return ((ZoneBlockBlockEntity) blockEntity).openScreen(player) ? ActionResult.success(world.isClient) : ActionResult.PASS;
 		}
 		return ActionResult.PASS;

@@ -1,7 +1,6 @@
 package net.rotgruengelb.landscape;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.rotgruengelb.landscape.block.ModBlocks;
 import net.rotgruengelb.landscape.block.entity.ModBlockEntities;
 import net.rotgruengelb.landscape.command.ModCommandNodes;

@@ -14,7 +14,7 @@ public class Util {
 	 * @return boolean wining boolean value
 	 */
 	public static boolean mapWins(Map<Integer, Boolean> map) {
-		int highestPriority = 0;
+		int highestPriority = Integer.MIN_VALUE;
 		int trueCount = 0;
 		int falseCount = 0;
 
@@ -27,11 +27,8 @@ public class Util {
 				trueCount = value ? 1 : 0;
 				falseCount = value ? 0 : 1;
 			} else if (priority == highestPriority) {
-				if (value) {
-					trueCount++;
-				} else {
-					falseCount++;
-				}
+				trueCount += value ? 1 : 0;
+				falseCount += value ? 0 : 1;
 			}
 		}
 

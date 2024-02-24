@@ -16,8 +16,7 @@ import net.rotgruengelb.landscape.util.math.BlockZone;
 
 @Environment(EnvType.CLIENT)
 public class ZoneBlockBlockEntityRenderer implements BlockEntityRenderer<ZoneBlockBlockEntity> {
-	public ZoneBlockBlockEntityRenderer(BlockEntityRendererFactory.Context ctx) {
-	}
+	public ZoneBlockBlockEntityRenderer(BlockEntityRendererFactory.Context ctx) { }
 
 	@Override
 	public void render(ZoneBlockBlockEntity zoneBlockBlockEntity, float f, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, int j) {
@@ -35,12 +34,8 @@ public class ZoneBlockBlockEntityRenderer implements BlockEntityRenderer<ZoneBlo
 	}
 
 	@Override
-	public boolean rendersOutsideBoundingBox(ZoneBlockBlockEntity structureBlockBlockEntity) {
-		return true;
-	}
+	public boolean rendersOutsideBoundingBox(ZoneBlockBlockEntity structureBlockBlockEntity) { return true; }
 
 	@Override
-	public int getRenderDistance() {
-		return 96;
-	}
+	public int getRenderDistance() { return 196; }
 }

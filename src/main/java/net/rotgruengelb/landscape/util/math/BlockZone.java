@@ -13,14 +13,10 @@ public class BlockZone {
 
 	private final BlockPos pos1;
 	private final BlockPos pos2;
-	private final MXVect min;
-	private final MXVect max;
 
 	public BlockZone(BlockPos pos1, BlockPos pos2) {
 		this.pos1 = pos1;
 		this.pos2 = pos2;
-		this.min = new MXVect(pos1, pos2, false);
-		this.max = new MXVect(pos1, pos2, true);
 	}
 
 	public static BlockZone fromNbt(NbtElement nbt) {
@@ -30,9 +26,9 @@ public class BlockZone {
 		return new BlockZone(pos1, pos2);
 	}
 
-	public static BlockPos blockPosFromNbtIntArray(NbtIntArray nbtIntArray) {
-		return new BlockPos(nbtIntArray.get(0).intValue(), nbtIntArray.get(1)
-				.intValue(), nbtIntArray.get(2).intValue());
+	private static BlockPos blockPosFromNbtIntArray(NbtIntArray nbtIntArray) {
+		int[] intArray = nbtIntArray.getIntArray();
+		return new BlockPos(intArray[0], intArray[1], intArray[2]);
 	}
 
 	public static List<Integer> blockPosToList(BlockPos pos) {
@@ -41,6 +37,14 @@ public class BlockZone {
 		list.add(pos.getY());
 		list.add(pos.getZ());
 		return list;
+	}
+
+	public BlockPos pos1() {
+		return pos1(false);
+	}
+
+	public BlockPos pos2() {
+		return pos2(false);
 	}
 
 	public BlockPos pos1(boolean forRender) {
@@ -78,8 +82,12 @@ public class BlockZone {
 	}
 
 	public boolean isBlockPosInZone(BlockPos pos) {
-
-		return pos.getX() >= min.X && pos.getX() <= max.X && pos.getY() >= min.Y && pos.getY() <= max.Y && pos.getZ() >= min.Z && pos.getZ() <= max.Z;
+		return pos.getX() >= Math.min(this.pos1.getX(), this.pos2.getX()) &&
+				pos.getX() <= Math.max(this.pos1.getX(), this.pos2.getX()) &&
+				pos.getY() >= Math.min(this.pos1.getY(), this.pos2.getY()) &&
+				pos.getY() <= Math.max(this.pos1.getY(), this.pos2.getY()) &&
+				pos.getZ() >= Math.min(this.pos1.getZ(), this.pos2.getZ()) &&
+				pos.getZ() <= Math.max(this.pos1.getZ(), this.pos2.getZ());
 	}
 
 	public NbtElement toNbt() {
@@ -95,30 +103,11 @@ public class BlockZone {
 	}
 
 	public BlockZone getWithRotation(Direction direction) {
-		if (!direction.equals(Direction.NORTH)) {
-			BlockPos pos1 = PositionUtils.rotateBlockPos(this.pos1, direction);
-			BlockPos pos2 = PositionUtils.rotateBlockPos(this.pos2, direction);
-			return new BlockZone(pos1, pos2);
+		if (direction == Direction.NORTH) {
+			return this;
 		}
-		return new BlockZone(this.pos1, this.pos2);
-	}
-
-	private static class MXVect {
-		public final double X;
-		public final double Y;
-		public final double Z;
-
-		private MXVect(BlockPos pos1, BlockPos pos2, boolean isMax) {
-
-			if (isMax) {
-				this.X = Math.max(pos1.getX(), pos2.getX());
-				this.Y = Math.max(pos1.getY(), pos2.getY());
-				this.Z = Math.max(pos1.getZ(), pos2.getZ());
-			} else {
-				this.X = Math.min(pos1.getX(), pos2.getX());
-				this.Y = Math.min(pos1.getY(), pos2.getY());
-				this.Z = Math.min(pos1.getZ(), pos2.getZ());
-			}
-		}
+		BlockPos rotatedPos1 = PositionUtils.rotateBlockPos(this.pos1, direction);
+		BlockPos rotatedPos2 = PositionUtils.rotateBlockPos(this.pos2, direction);
+		return new BlockZone(rotatedPos1, rotatedPos2);
 	}
 }

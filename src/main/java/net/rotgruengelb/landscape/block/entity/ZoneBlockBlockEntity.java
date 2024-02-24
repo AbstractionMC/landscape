@@ -18,24 +18,30 @@ import net.rotgruengelb.landscape.block.ZoneBlock;
 import net.rotgruengelb.landscape.block.enums.ZoneBlockMode;
 import net.rotgruengelb.landscape.feature.zones.ZoneManager;
 import net.rotgruengelb.landscape.feature.zones.manager.AvailableZoneManagers;
+import net.rotgruengelb.landscape.feature.zones.manager.context.ZoneManagerContext;
 import net.rotgruengelb.landscape.feature.zones.rule.AvailableRuleSets;
 import net.rotgruengelb.landscape.feature.zones.rule.RuleSet;
 import net.rotgruengelb.landscape.util.math.BlockZone;
-import net.rotgruengelb.landscape.util.math.PositionUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
 public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProvider, ZoneManager {
 
-	private List<BlockZone> zones = new ArrayList<>();
+	private static final HashMap<ZoneBlockMode, RuleSet> MODE_RULESETS = new HashMap<>() {{
+		put(ZoneBlockMode.CUSTOM_RULESET, null);
+		put(ZoneBlockMode.TRIGGER, RuleSet.of(AvailableRuleSets.EMPTY_RULESET));
+		put(ZoneBlockMode.DENY_WORLD_MODIFY, RuleSet.of("landscape:rulesets/test"));
+	}};
 	private ZoneBlockMode mode;
-	private boolean showZones;
+	private boolean showZones = false;
 	private boolean powered;
-	private int priority = 1;
 	private RuleSet ruleSet = RuleSet.of(AvailableRuleSets.EMPTY_RULESET);
+	private int priority = 0;
+	private List<BlockZone> zones = new ArrayList<>();
 
 	public ZoneBlockBlockEntity(BlockPos pos, BlockState state) {
 		super(ModBlockEntities.ZONE_BLOCK_BLOCK_ENTITY, pos, state);
@@ -73,12 +79,23 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 		} catch (IllegalArgumentException e) {
 			this.mode = ZoneBlockMode.TRIGGER;
 		}
-		this.ruleSet = RuleSet.of(Objects.requireNonNullElse(RuleSet.of(Identifier.tryParse(nbt.getString("ruleSet"))).getIdentifier(), AvailableRuleSets.EMPTY_RULESET));
+		this.ruleSet = RuleSet.of(Objects.requireNonNullElse(RuleSet.of(Identifier.tryParse(nbt.getString("ruleSet")))
+				.getIdentifier(), AvailableRuleSets.EMPTY_RULESET));
 		this.updateBlockMode();
+		this.updateContext();
+	}
+
+	private List<BlockZone> nbtToZones(NbtCompound zones) {
+		List<BlockZone> zonesList = new ArrayList<>();
+		for (String key : zones.getKeys()) {
+			zonesList.add(BlockZone.fromNbt(zones.get(key)));
+		}
+		return zonesList;
 	}
 
 	private void updateBlockMode() {
 		if (this.world != null) {
+			Landscape.LOGGER.debug("Updating block mode");
 			BlockPos blockPos = this.getPos();
 			BlockState blockState = this.world.getBlockState(blockPos);
 			if (blockState.isOf(ModBlocks.ZONE_BLOCK)) {
@@ -91,7 +108,8 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	public void setWorld(World world) {
 		super.setWorld(world);
 		if (!world.isClient) {
-			AvailableZoneManagers.onCreatedManager(this.pos, world);
+			Landscape.LOGGER.debug("ZoneBlockBlockEntity is added to the world. Now adding to AvailableZoneManagers.");
+			AvailableZoneManagers.createZoneManager(this.getZoneManagerContext(), world);
 		}
 	}
 
@@ -99,7 +117,8 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	public void markRemoved() {
 		super.markRemoved();
 		if (this.world != null && !world.isClient) {
-			AvailableZoneManagers.onRemovedManager(this.pos, this.world);
+			Landscape.LOGGER.debug("ZoneBlockBlockEntity is removed from the world. Now removing from AvailableZoneManagers.");
+			AvailableZoneManagers.removeZoneManager(this.pos, this.world);
 		}
 	}
 
@@ -107,16 +126,9 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	public void cancelRemoval() {
 		super.cancelRemoval();
 		if (this.world != null && !world.isClient) {
-			AvailableZoneManagers.onCreatedManager(this.pos, this.world);
+			Landscape.LOGGER.debug("ZoneBlockBlockEntity is added back to the world. Now adding to AvailableZoneManagers.");
+			AvailableZoneManagers.createZoneManager(this.getZoneManagerContext(), this.world);
 		}
-	}
-
-	private List<BlockZone> nbtToZones(NbtCompound zones) {
-		List<BlockZone> zonesList = new ArrayList<>();
-		for (String key : zones.getKeys()) {
-			zonesList.add(BlockZone.fromNbt(zones.get(key)));
-		}
-		return zonesList;
 	}
 
 	@Nullable
@@ -128,32 +140,6 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 	public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
 		return new ZoneBlockBlockEntity(pos, state);
 	}
-
-	public boolean isBlockPosInZone(BlockPos pos, boolean isRelative) {
-		if (!isRelative) {
-			pos = PositionUtils.blockPosToRelative(pos, this.getPos());
-		}
-		for (BlockZone zone : this.getZones(false)) {
-			if (zone.isBlockPosInZone(pos)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public int getPriority() { return priority; }
-
-	public void setPriority(int priority) { this.priority = priority; }
-
-	@Override
-	public RuleSet getRuleSet() { return ruleSet; }
-
-	public void setRuleSet(Identifier ruleSet) { this.ruleSet = RuleSet.of(ruleSet); }
-
-	public void setRuleSet(RuleSet ruleSet) { this.ruleSet = ruleSet; }
-
-	public String getRuleSetString() { Landscape.LOGGER.info(ruleSet.getIdentifierString()); return ruleSet.getIdentifierString(); }
 
 	public boolean openScreen(PlayerEntity player) {
 		if (!player.isCreativeLevelTwoOp()) { return false; }
@@ -190,6 +176,29 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 		}
 	}
 
+	public void setPriority(int priority) { this.priority = priority; }
+
+	public void updateContext() {
+		if (this.world != null && !this.world.isClient) {
+			AvailableZoneManagers.updateZoneManager(this.getZoneManagerContext(), this.world);
+		}
+	}
+
+	public boolean shouldShowZones() { return this.showZones; }
+
+	public void setShowZones(boolean shouldShowZones) { this.showZones = shouldShowZones; }
+
+	@Override
+	public ZoneManagerContext getZoneManagerContext() {
+		return new ZoneManagerContext(this.pos, this.getCachedState()
+				.get(ZoneBlock.FACING), this.getRuleSet(true), this.priority, this.zones);
+
+	}
+
+	public List<BlockZone> getZones() { return getZones(true); }
+
+	public void setZones(NbtCompound zones) { this.zones = this.nbtToZones(zones); }
+
 	public List<BlockZone> getZones(boolean wantRaw) {
 		if (wantRaw) return this.zones;
 		List<BlockZone> rotatedZones = new ArrayList<>();
@@ -199,11 +208,20 @@ public class ZoneBlockBlockEntity extends BlockEntity implements BlockEntityProv
 		return rotatedZones;
 	}
 
-	public List<BlockZone> getZones() { return getZones(true); }
+	public RuleSet getRuleSet() {
+		return this.ruleSet;
+	}
 
-	public void setZones(NbtCompound zones) { this.zones = this.nbtToZones(zones); }
+	public void setRuleSet(RuleSet ruleSet) {
+		this.ruleSet = ruleSet;
+	}
 
-	public boolean shouldShowZones() { return this.showZones; }
-
-	public void setShowZones(boolean shouldShowZones) { this.showZones = shouldShowZones; }
+	public RuleSet getRuleSet(boolean useMode) {
+		RuleSet returnRuleSet = this.ruleSet;
+		RuleSet gotRuleSet = MODE_RULESETS.get(this.mode);
+		if (useMode && gotRuleSet != null) {
+			returnRuleSet = gotRuleSet;
+		}
+		return returnRuleSet;
+	}
 }

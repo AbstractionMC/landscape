@@ -17,11 +17,11 @@ import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.rotgruengelb.landscape.LandscapeClient;
 import net.rotgruengelb.landscape.block.ModBlocks;
 import net.rotgruengelb.landscape.block.ZoneBlock;
 import net.rotgruengelb.landscape.block.entity.ZoneBlockBlockEntity;
 import net.rotgruengelb.landscape.block.enums.ZoneBlockMode;
-import net.rotgruengelb.landscape.feature.zones.rule.RuleSet;
 import net.rotgruengelb.landscape.network.UpdateZoneBlockC2SPacket;
 import net.rotgruengelb.nixienaut.ClampedNum;
 import org.lwjgl.glfw.GLFW;
@@ -36,13 +36,14 @@ public class ZoneBlockScreen extends Screen {
 	private static final Text SHOW_ZONES_TEXT = Text.translatable("text.landscape.zone_block.screen.show_zones");
 	private static final Text SET_PRIORITY_TEXT = Text.translatable("text.landscape.zone_block.screen.set_priority");
 	private static final Text title = Text.translatable("text.landscape.zone_block.screen.title");
+	private static final Text SET_RULESET_TEXT = Text.translatable("text.landscape.zone_block.screen.set_ruleset");
 	private final BlockPos pos;
 	private final ZoneBlockMode originalMode;
 	private final boolean originalShowZones;
 	private final String newRuleSet;
-	private NbtCompound originalZones;
 	private final int originalPriority;
 	private final ClampedNum<Integer> newPriority = new ClampedNum<>(0, 99);
+	private NbtCompound originalZones;
 	private String newZones;
 	private ZoneBlockMode newMode;
 	private boolean newShowZones;
@@ -57,15 +58,16 @@ public class ZoneBlockScreen extends Screen {
 		this.pos = zoneBlock.getPos();
 		this.originalMode = zoneBlock.getMode();
 		this.originalShowZones = zoneBlock.shouldShowZones();
-		this.originalPriority = zoneBlock.getPriority();
+		this.originalPriority = zoneBlock.getZoneManagerContext().priority();
 		this.newPriority.adjustAndSetValue(this.originalPriority);
-		this.newRuleSet = zoneBlock.getRuleSetString();
+		this.newRuleSet = zoneBlock.getRuleSet().getIdentifierString();
 		this.newMode = this.originalMode;
 		this.newShowZones = this.originalShowZones;
 	}
 
 	private void done() {
 		this.clientBlockState(this.newMode);
+		LandscapeClient.C_LOGGER.debug("Sending UpdateZoneBlockC2SPacket for " + this.pos + " with mode " + this.newMode + " and showZones " + this.newShowZones + " and priority " + this.newPriority + " and ruleSet " + this.newRuleSet + " and zones " + this.newZones);
 		ClientPlayNetworking.send(C2S_UPDATE_ZONE_BLOCK_PACKET_ID, new UpdateZoneBlockC2SPacket(this.pos, this.newMode, this.newShowZones, this.processZones(), this.processPriority(), this.processRuleSet()).create());
 		this.client.setScreen(null);
 	}
@@ -110,7 +112,7 @@ public class ZoneBlockScreen extends Screen {
 				}));
 		this.buttonMode = this.addDrawableChild(CyclingButtonWidget.builder((ZoneBlockMode value) -> Text.translatable("text.landscape.zone_block.mode." + value.asString()))
 				.values(MODES).omitKeyText().initially(this.newMode)
-				.build(this.width / 2 - 4 - 150, 185, 80, 20, Text.literal("MODE"), (button, blockMode) -> {
+				.build(this.width / 2 - 4 - 150, 185, 100, 20, Text.literal("MODE"), (button, blockMode) -> {
 					this.newMode = button.getValue();
 					this.clientBlockState(this.newMode);
 					this.updateWidgets(this.newMode);
@@ -164,23 +166,16 @@ public class ZoneBlockScreen extends Screen {
 	}
 
 	private void updateWidgets(ZoneBlockMode mode) {
-		switch (mode) {
-			case TRIGGER: {
-				break;
-			}
-			//            case DENY_BREAK: {
-			//                break;
-			//            }
-			//            case DENY_PLACE: {
-			//                break;
-			//            }
-			//            case ALLOW_BREAK: {
-			//                break;
-			//            }
-			//            case ALLOW_PLACE: {
-			//                break;
-			//            }
-		}
+		// TODO: Will maybe do something for the TRIGGER mode...
+		//		switch (mode) {
+		//			case TRIGGER: {
+		//				Dummy._void();
+		//				break;
+		//			}
+		//			default: {
+		//				break;
+		//			}
+		//		}
 	}
 
 	@Override
@@ -207,7 +202,7 @@ public class ZoneBlockScreen extends Screen {
 		this.inputZones.render(context, mouseX, mouseY, delta);
 		this.inputPriority.render(context, mouseX, mouseY, delta);
 		this.inputRuleSet.render(context, mouseX, mouseY, delta);
-		context.drawTextWithShadow(this.textRenderer, SET_PRIORITY_TEXT, this.width / 2 - 153, 110, 0xA0A0A0);
+		context.drawTextWithShadow(this.textRenderer, SET_RULESET_TEXT, this.width / 2 - 153, 110, 0xA0A0A0);
 		context.drawTextWithShadow(this.textRenderer, SET_PRIORITY_TEXT, this.width / 2 - 153, 70, 0xA0A0A0);
 		context.drawTextWithShadow(this.textRenderer, SHOW_ZONES_TEXT, this.width / 2 + 154 - this.textRenderer.getWidth(SHOW_ZONES_TEXT), 70, 0xA0A0A0);
 		context.drawCenteredTextWithShadow(this.textRenderer, title, this.width / 2, 10, 0xFFFFFF);

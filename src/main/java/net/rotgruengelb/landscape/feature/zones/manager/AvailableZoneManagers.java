@@ -2,115 +2,105 @@ package net.rotgruengelb.landscape.feature.zones.manager;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtIntArray;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.server.MinecraftServer;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
 import net.rotgruengelb.landscape.Landscape;
+import net.rotgruengelb.landscape.feature.zones.manager.context.ZoneManagerContext;
+import net.rotgruengelb.landscape.network.ZoneManagerSyncS2CPacket;
+import net.rotgruengelb.landscape.network.constant.PacketIds;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-public class AvailableZoneManagers extends PersistentState {
+public class AvailableZoneManagers {
 
-	private static final Map<Identifier, List<BlockPos>> MANAGERS = new HashMap<>();
-	private static final Type<AvailableZoneManagers> type = new Type<>(AvailableZoneManagers::new, AvailableZoneManagers::createFromNbt, null);
-	@Environment(EnvType.CLIENT) private static boolean clientIsInitialized = false;
+	private final static HashMap<Identifier, HashMap<BlockPos, ZoneManagerContext>> clientSyncedZoneManagers = new HashMap<>();
+	private final static HashMap<Identifier, HashMap<BlockPos, ZoneManagerContext>> zoneManagers = new HashMap<>();
 
-	public static void onCreatedManager(BlockPos pos, World world) {
-		MinecraftServer server = world.getServer();
-		if (server != null) {
-			getServerState(server);
+	public static void createZoneManager(ZoneManagerContext manager, World world) {
+		if (!world.isClient) {
+			getOrCreateZoneManagers(world).put(manager.pos(), manager);
+			Landscape.LOGGER.debug("Sending ZoneManagerSyncS2CPacket ADD for " + manager.pos() + " in " + world.getRegistryKey().getValue());
+			world.getServer().getPlayerManager().getPlayerList()
+					.forEach(player -> ServerPlayNetworking.send(player, PacketIds.S2C_ZONE_MANAGER_SYNC_PACKET_ID, new ZoneManagerSyncS2CPacket(ZoneManagerSyncS2CPacket.OperationType.ADD, manager, world).create()));
 		}
-		Identifier worldId = world.getDimensionKey().getValue();
-		MANAGERS.computeIfAbsent(worldId, k -> new ArrayList<>()).add(pos);
 	}
 
 	@Environment(EnvType.CLIENT)
-	public static void clientInitialized() {
-		clientIsInitialized = true;
+	public static void addClientSyncedZoneManager(ZoneManagerContext manager, Identifier world) {
+		getOrCreateClientSyncedZoneManagers(world).put(manager.pos(), manager);
 	}
 
 	@Environment(EnvType.CLIENT)
-	public static boolean isClientInitialized() {
-		return clientIsInitialized;
+	public static void removeClientSyncedZoneManager(BlockPos pos, Identifier world) {
+		getOrCreateClientSyncedZoneManagers(world).remove(pos);
 	}
 
-	public static void onRemovedManager(BlockPos pos, World world) {
-		MinecraftServer server = world.getServer();
-		if (server != null) {
-			getServerState(server);
+	@Environment(EnvType.CLIENT)
+	public static void updateClientSyncedZoneManager(ZoneManagerContext manager, Identifier world) {
+		getOrCreateClientSyncedZoneManagers(world).replace(manager.pos(), manager);
+	}
+
+	@Environment(EnvType.CLIENT)
+	public static void clearClientSyncedZoneManagers() {
+		clientSyncedZoneManagers.clear();
+	}
+
+	@Environment(EnvType.CLIENT)
+	private static HashMap<BlockPos, ZoneManagerContext> getOrCreateClientSyncedZoneManagers(Identifier world) {
+		return clientSyncedZoneManagers.computeIfAbsent(world, k -> new HashMap<>());
+	}
+
+	public static void removeZoneManager(BlockPos pos, World world) {
+		if (!world.isClient) {
+			var allManagers = getOrCreateZoneManagers(world);
+			Landscape.LOGGER.debug("Sending ZoneManagerSyncS2CPacket REMOVE for " + pos + " in " + world.getRegistryKey().getValue());
+			world.getServer().getPlayerManager().getPlayerList()
+					.forEach(player -> ServerPlayNetworking.send(player, PacketIds.S2C_ZONE_MANAGER_SYNC_PACKET_ID, new ZoneManagerSyncS2CPacket(ZoneManagerSyncS2CPacket.OperationType.REMOVE, allManagers.get(pos), world).create()));
+			allManagers.remove(pos);
 		}
-		List<BlockPos> dimManagers = MANAGERS.get(world.getDimensionKey().getValue());
-		dimManagers.remove(pos);
 	}
 
-	public static List<BlockPos> getManagers(World world) {
-		if (!MANAGERS.containsKey(world.getDimensionKey().getValue())) {
-			MANAGERS.put(world.getDimensionKey().getValue(), new ArrayList<>());
+	public static void updateZoneManager(ZoneManagerContext manager, World world) {
+		if (!world.isClient) {
+			getOrCreateZoneManagers(world).replace(manager.pos(), manager);
+			Landscape.LOGGER.debug("Sending ZoneManagerSyncS2CPacket UPDATE for " + manager.pos() + " in " + world.getRegistryKey().getValue());
+			world.getServer().getPlayerManager().getPlayerList()
+					.forEach(player -> ServerPlayNetworking.send(player, PacketIds.S2C_ZONE_MANAGER_SYNC_PACKET_ID, new ZoneManagerSyncS2CPacket(ZoneManagerSyncS2CPacket.OperationType.UPDATE, manager, world).create()));
 		}
-		return MANAGERS.get(world.getDimensionKey().getValue());
 	}
 
-	private static AvailableZoneManagers createFromNbt(NbtCompound nbtCompound) {
-		AvailableZoneManagers state = new AvailableZoneManagers();
-		NbtCompound managers = nbtCompound.getCompound("managers");
-		for (String dimension : managers.getKeys()) {
-			NbtList sub_managers = managers.getList(dimension, NbtElement.INT_ARRAY_TYPE);
-			List<BlockPos> dimension_managers = new ArrayList<>();
-			for (NbtElement sub_manager : sub_managers) {
-				int[] sub_manager_pos = ((NbtIntArray) sub_manager).getIntArray();
-				dimension_managers.add(new BlockPos(sub_manager_pos[0], sub_manager_pos[1], sub_manager_pos[2]));
-			}
-			MANAGERS.put(new Identifier(dimension), dimension_managers);
+	public static ArrayList<ZoneManagerContext> getZoneManagers(World world) {
+		if (world.isClient) {
+			return new ArrayList<>(getOrCreateClientSyncedZoneManagers(world.getRegistryKey().getValue()).values());
 		}
-		return state;
+		return new ArrayList<>(getOrCreateZoneManagers(world.getRegistryKey().getValue()).values());
 	}
 
-	public static AvailableZoneManagers getServerState(MinecraftServer server) {
-		PersistentStateManager persistentStateManager = server.getWorld(World.OVERWORLD)
-				.getPersistentStateManager();
-		AvailableZoneManagers state = persistentStateManager.getOrCreate(type, Landscape.MOD_ID);
-		state.markDirty();
-		return state;
+//	public static NbtList posListToNbtList(ArrayList<ZoneManagerContext> managers) {
+//		NbtList nbtList = new NbtList();
+//		managers.forEach(manager -> nbtList.add(new NbtIntArray(new int[]{manager.getPos().getX(), manager.getPos().getY(), manager.getPos().getZ()})));
+//		return nbtList;
+//	}
+//
+//	public static ArrayList<ZoneManagerContext> posNbtListToList(NbtList managers, World world) {
+//		ArrayList<ZoneManagerContext> posList = new ArrayList<>();
+//		managers.forEach(manager -> {
+//			int[] posArray = ((NbtIntArray) manager).getIntArray();
+//			BlockPos pos = new BlockPos(posArray[0], posArray[1], posArray[2]);
+//			if (world.getBlockEntity(pos) instanceof ZoneManager zoneManager)
+//				posList.add(zoneManager.getZoneManagerContext());
+//		});
+//		return posList;
+//	}
+
+	private static HashMap<BlockPos, ZoneManagerContext> getOrCreateZoneManagers(Identifier world) {
+		return zoneManagers.computeIfAbsent(world, k -> new HashMap<>());
 	}
 
-	public static NbtList posListToNbtList(List<BlockPos> managers) {
-		NbtList nbtList = new NbtList();
-		for (BlockPos pos : managers) {
-			nbtList.add(new NbtIntArray(List.of(pos.getX(), pos.getY(), pos.getZ())));
-		}
-		return nbtList;
-	}
-
-	public static List<BlockPos> posNbtListToList(NbtList managers) {
-		List<BlockPos> posList = new ArrayList<>();
-		for (NbtElement pos : managers) {
-			int[] posArray = ((NbtIntArray) pos).getIntArray();
-			posList.add(new BlockPos(posArray[0], posArray[1], posArray[2]));
-		}
-		return posList;
-	}
-
-	@Override
-	public NbtCompound writeNbt(NbtCompound nbt) {
-		NbtCompound managers = new NbtCompound();
-		for (Identifier dimension : MANAGERS.keySet()) {
-			NbtList sub_managers = new NbtList();
-			for (BlockPos pos : MANAGERS.get(dimension)) {
-				sub_managers.add(new NbtIntArray(List.of(pos.getX(), pos.getY(), pos.getZ())));
-			}
-			managers.put(dimension.toString(), sub_managers);
-		}
-		nbt.put("managers", managers);
-		return nbt;
+	private static HashMap<BlockPos, ZoneManagerContext> getOrCreateZoneManagers(World world) {
+		return getOrCreateZoneManagers(world.getRegistryKey().getValue());
 	}
 }
